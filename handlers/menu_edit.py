@@ -154,6 +154,53 @@ async def apply_dish_edit(message: Message, state: FSMContext):
         reply_markup=menu_actions_keyboard(data["edit_menu_id"], plan)
     )
     await state.clear()
+    await state.set_state(EditMenuFSM.new_dish)
+    await message.answer(
+        "Введите название нового блюда:\n\nНапример: <code>Греческий салат</code>",
+        parse_mode="HTML"
+    )
+
+
+@router.message(EditMenuFSM.new_dish)
+async def apply_dish_edit(message: Message, state: FSMContext):
+    new_dish_name = message.text.strip()
+    data = await state.get_data()
+
+    await message.answer("Обновляю блюдо...")
+
+    async with AsyncSessionLocal() as session:
+        menu = await session.get(Menu, data["edit_menu_id"])
+        plan = await get_user_plan(session, message.from_user.id)
+
+        content = menu.content
+        day = next((d for d in content["days"] if d["day"] == data["edit_day"]), None)
+        meal = next((m for m in day["meals"] if m["meal_type"] == data["edit_meal"]), None)
+
+        if meal and 0 <= data["edit_dish_idx"] < len(meal["dishes"]):
+            meal["dishes"][data["edit_dish_idx"]] = {
+                "name": new_dish_name,
+                "description": "Блюдо добавлено пользователем",
+                "ingredients": [],
+                "calories_per_serving": None,
+                "proteins": None,
+                "fats": None,
+                "carbs": None
+            }
+
+        from sqlalchemy import update
+        await session.execute(
+            update(Menu).where(Menu.id == data["edit_menu_id"]).values(content=content)
+        )
+        await session.commit()
+        await session.refresh(menu)
+
+    await message.answer(
+        "Блюдо заменено на: <b>" + new_dish_name + "</b>\n\n"
+        + format_menu_summary(menu.content, plan),
+        parse_mode="HTML",
+        reply_markup=menu_actions_keyboard(data["edit_menu_id"], plan)
+    )
+    await state.clear()
         return
     await state.update_data(edit_dish_idx=dish_idx)
     await state.set_state(EditMenuFSM.new_dish)
