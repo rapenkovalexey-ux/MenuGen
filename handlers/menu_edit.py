@@ -156,6 +156,32 @@ async def apply_dish_edit(message: Message, state: FSMContext):
         parse_mode="HTML",
         reply_markup=menu_actions_keyboard(data["edit_menu_id"], plan)
     )
+    await state.clear()        meal = next((m for m in day["meals"] if m["meal_type"] == data["edit_meal"]), None)
+
+        if meal and 0 <= data["edit_dish_idx"] < len(meal["dishes"]):
+            meal["dishes"][data["edit_dish_idx"]] = {
+                "name": new_dish_name,
+                "description": "Р‘Р»СЋРґРѕ РґРѕР±Р°РІР»РµРЅРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј",
+                "ingredients": [],
+                "calories_per_serving": None,
+                "proteins": None,
+                "fats": None,
+                "carbs": None
+            }
+
+        from sqlalchemy import update
+        await session.execute(
+            update(Menu).where(Menu.id == data["edit_menu_id"]).values(content=content)
+        )
+        await session.commit()
+        await session.refresh(menu)
+
+    await message.answer(
+        "Р‘Р»СЋРґРѕ Р·Р°РјРµРЅРµРЅРѕ РЅР°: <b>" + new_dish_name + "</b>\n\n"
+        + format_menu_summary(menu.content, plan),
+        parse_mode="HTML",
+        reply_markup=menu_actions_keyboard(data["edit_menu_id"], plan)
+    )
     await state.clear()        parse_mode="HTML"
     )
 
