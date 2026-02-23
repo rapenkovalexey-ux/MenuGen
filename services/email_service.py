@@ -50,5 +50,5 @@ async def send_support_email(
         return True
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        return False
+        return False 
  
