@@ -1,4 +1,4 @@
- import logging
+import logging
 import urllib.parse
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup
