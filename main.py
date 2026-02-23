@@ -1,8 +1,9 @@
 import asyncio
 import logging
+import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from config import BOT_TOKEN
+from config import BOT_TOKEN, GROQ_API_KEY
 from database.db import init_db
 from handlers import (
     start, settings, menu_generation, menu_edit,
@@ -17,14 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
+    # Диагностика переменных окружения
+    logger.info(f"GROQ_API_KEY present: {bool(GROQ_API_KEY)}")
+    logger.info(f"GROQ_API_KEY length: {len(GROQ_API_KEY)}")
+    logger.info(f"GROQ_API_KEY starts with: {GROQ_API_KEY[:7] if GROQ_API_KEY else 'EMPTY'}")
+
     bot = Bot(token=BOT_TOKEN)
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
-    # Init DB
     await init_db()
 
-    # Register routers
     dp.include_router(start.router)
     dp.include_router(settings.router)
     dp.include_router(menu_generation.router)
