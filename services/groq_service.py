@@ -231,3 +231,4 @@ async def substitute_ingredient(ingredient: str, diet_type: str) -> str:
             content = content[4:]
     content = content.strip().rstrip("```").strip()
     return json.loads(content)
+ 
