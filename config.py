@@ -10,12 +10,12 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./menu_bot.db")
 
 # Payment
 PAYMENT_TOKEN = os.getenv("PAYMENT_TOKEN", "")
-SUBSCRIPTION_PRICE_RUB = 299  # monthly price
+SUBSCRIPTION_PRICE_RUB = 299
 
 # Limits
 FREE_MAX_DAYS = 3
 TRIAL_DAYS = 10
 TRIAL_MAX_DAYS = 31
 
-# OpenRouter — бесплатная модель, работает с Railway
-GROQ_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+# Groq — актуальная модель
+GROQ_MODEL = "llama-3.3-70b-versatile"
