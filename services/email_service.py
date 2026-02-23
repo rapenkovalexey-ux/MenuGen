@@ -1,4 +1,4 @@
-import smtplib
+ import smtplib
 import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -51,3 +51,4 @@ async def send_support_email(
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
         return False
+ 
