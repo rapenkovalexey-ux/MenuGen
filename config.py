@@ -17,5 +17,5 @@ FREE_MAX_DAYS = 3
 TRIAL_DAYS = 10
 TRIAL_MAX_DAYS = 31
 
-# Groq — актуальная модель (llama3-70b-8192 устарела)
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# OpenRouter — бесплатная модель, работает с Railway
+GROQ_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
