@@ -134,3 +134,4 @@ def yes_no_keyboard(yes_cb: str, no_cb: str) -> InlineKeyboardMarkup:
     builder.button(text="❌ Нет", callback_data=no_cb)
     builder.adjust(2)
     return builder.as_markup()
+ 
