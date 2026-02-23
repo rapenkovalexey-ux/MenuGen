@@ -32,11 +32,11 @@ class MenuFSM(StatesGroup):
 
 
 MEAL_NAMES = {
-    "breakfast": "Р—Р°РІС‚СЂР°Рє",
-    "brunch": "Р’С‚РѕСЂРѕР№ Р·Р°РІС‚СЂР°Рє",
-    "lunch": "РћР±РµРґ",
-    "snack": "РџРµСЂРµРєСѓСЃ",
-    "dinner": "РЈР¶РёРЅ",
+    "breakfast": "Завтрак",
+    "brunch": "Второй завтрак",
+    "lunch": "Обед",
+    "snack": "Перекус",
+    "dinner": "Ужин",
 }
 
 DEFAULT_TIMES = {
@@ -48,13 +48,13 @@ DEFAULT_TIMES = {
 }
 
 
-@router.message(F.text == "\U0001f37d\ufe0f РЎРѕР·РґР°С‚СЊ РјРµРЅСЋ")
+@router.message(F.text == "\U0001f37d\ufe0f Создать меню")
 async def start_menu_creation(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(MenuFSM.diet)
     await message.answer(
-        "<b>РЁР°Рі 1/5: Р’С‹Р±РµСЂРёС‚Рµ СЂРµР¶РёРј РїРёС‚Р°РЅРёСЏ</b>\n\n"
-        "РћС‚ СЌС‚РѕРіРѕ Р·Р°РІРёСЃРёС‚ РїРѕРґР±РѕСЂ Р±Р»СЋРґ Рё РєР°Р»РѕСЂРёР№РЅРѕСЃС‚СЊ:",
+        "<b>Шаг 1/5: Выберите режим питания</b>\n\n"
+        "От этого зависит подбор блюд и калорийность:",
         parse_mode="HTML",
         reply_markup=diet_keyboard()
     )
@@ -66,7 +66,7 @@ async def process_diet(call: CallbackQuery, state: FSMContext):
     await state.update_data(diet=diet)
     await state.set_state(MenuFSM.people_count)
     await call.message.edit_text(
-        "<b>РЁР°Рі 2/5: РЎРєРѕР»СЊРєРѕ С‡РµР»РѕРІРµРє Р±СѓРґРµС‚ РїРёС‚Р°С‚СЊСЃСЏ?</b>",
+        "<b>Шаг 2/5: Сколько человек будет питаться?</b>",
         parse_mode="HTML",
         reply_markup=people_keyboard()
     )
@@ -77,7 +77,7 @@ async def process_people(call: CallbackQuery, state: FSMContext):
     val = call.data.split(":")[1]
     if val == "custom":
         await state.set_state(MenuFSM.people_custom)
-        await call.message.edit_text("Р’РІРµРґРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‡РµР»РѕРІРµРє (С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ 50):")
+        await call.message.edit_text("Введите количество человек (число от 1 до 50):")
         return
     count = int(val)
     await state.update_data(num_people=count, eaters=[], current_eater=0)
@@ -90,10 +90,10 @@ async def process_people_custom(message: Message, state: FSMContext):
     try:
         count = int(message.text.strip())
         if count < 1 or count > 50:
-            await message.answer("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ 50:")
+            await message.answer("Введите число от 1 до 50:")
             return
     except ValueError:
-        await message.answer("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІРІРµРґРёС‚Рµ С‡РёСЃР»Рѕ:")
+        await message.answer("Пожалуйста, введите число:")
         return
     await state.update_data(num_people=count, eaters=[], current_eater=0)
     await state.set_state(MenuFSM.eaters_info)
@@ -103,14 +103,14 @@ async def process_people_custom(message: Message, state: FSMContext):
 async def ask_eater_info(message_or_call, state: FSMContext, index: int, total: int):
     num = index + 1
     msg = (
-        "<b>РРЅС„РѕСЂРјР°С†РёСЏ Рѕ С‡РµР»РѕРІРµРєРµ " + str(num) + " РёР· " + str(total) + "</b>\n\n"
-        "Р’РІРµРґРёС‚Рµ РґР°РЅРЅС‹Рµ РІ С„РѕСЂРјР°С‚Рµ:\n"
-        "<code>РРјСЏ, РІРѕР·СЂР°СЃС‚, РїСЂРµРґРїРѕС‡С‚РµРЅРёСЏ</code>\n\n"
-        "РџСЂРёРјРµСЂС‹:\n"
-        "- <code>РњР°СЂРёСЏ, 35, Р±РµР· РѕСЂРµС…РѕРІ</code>\n"
-        "- <code>РџРµС‚СЏ, 8, Р»СЋР±РёС‚ СЃР»Р°РґРєРѕРµ Р±РµР· РѕСЃС‚СЂРѕРіРѕ</code>\n"
-        "- <code>Р”РµРґСѓС€РєР°, 72, РґРёР°Р±РµС‚ 2 С‚РёРїР°</code>\n\n"
-        "РР»Рё РЅР°Р¶РјРёС‚Рµ РџСЂРѕРїСѓСЃС‚РёС‚СЊ, РµСЃР»Рё Р±РµР· РѕСЃРѕР±РµРЅРЅРѕСЃС‚РµР№:"
+        "<b>Информация о человеке " + str(num) + " из " + str(total) + "</b>\n\n"
+        "Введите данные в формате:\n"
+        "<code>Имя, возраст, предпочтения</code>\n\n"
+        "Примеры:\n"
+        "- <code>Мария, 35, без орехов</code>\n"
+        "- <code>Петя, 8, любит сладкое без острого</code>\n"
+        "- <code>Дедушка, 72, диабет 2 типа</code>\n\n"
+        "Или нажмите Пропустить, если без особенностей:"
     )
     if hasattr(message_or_call, 'edit_text'):
         await message_or_call.edit_text(
@@ -129,7 +129,7 @@ async def skip_eater(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     idx = int(call.data.split(":")[1])
     eaters = data.get("eaters", [])
-    eaters.append({"name": "Р§РµР»РѕРІРµРє " + str(idx + 1), "age": None, "preferences": None})
+    eaters.append({"name": "Человек " + str(idx + 1), "age": None, "preferences": None})
     total = data["num_people"]
     await state.update_data(eaters=eaters, current_eater=idx + 1)
     if idx + 1 < total:
@@ -148,7 +148,7 @@ async def process_eater_info(message: Message, state: FSMContext):
     text = message.text.strip()
     parts = [p.strip() for p in text.split(",")]
     eater = {
-        "name": parts[0] if len(parts) > 0 else "Р§РµР»РѕРІРµРє " + str(idx + 1),
+        "name": parts[0] if len(parts) > 0 else "Человек " + str(idx + 1),
         "age": int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else None,
         "preferences": ", ".join(parts[2:]) if len(parts) > 2 else None
     }
@@ -169,12 +169,12 @@ async def proceed_to_days(message, state: FSMContext):
 
     if plan == "free":
         text = (
-            "<b>РЁР°Рі 3/5: РќР° СЃРєРѕР»СЊРєРѕ РґРЅРµР№ СЃРѕСЃС‚Р°РІРёС‚СЊ РјРµРЅСЋ?</b>\n\n"
-            "Р‘РµСЃРїР»Р°С‚РЅС‹Р№ РїР»Р°РЅ: РјР°РєСЃРёРјСѓРј " + str(FREE_MAX_DAYS) + " РґРЅСЏ. "
-            "Р”Р»СЏ Р±РѕР»СЊС€РµРіРѕ вЂ” РѕС„РѕСЂРјРёС‚Рµ PRO."
+            "<b>Шаг 3/5: На сколько дней составить меню?</b>\n\n"
+            "Бесплатный план: максимум " + str(FREE_MAX_DAYS) + " дня. "
+            "Для большего — оформите PRO."
         )
     else:
-        text = "<b>РЁР°Рі 3/5: РќР° СЃРєРѕР»СЊРєРѕ РґРЅРµР№ СЃРѕСЃС‚Р°РІРёС‚СЊ РјРµРЅСЋ?</b>"
+        text = "<b>Шаг 3/5: На сколько дней составить меню?</b>"
 
     await message.answer(text, parse_mode="HTML", reply_markup=days_keyboard(max_days))
 
@@ -187,12 +187,12 @@ async def process_days(call: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         plan = data.get("plan", "free")
         max_d = FREE_MAX_DAYS if plan == "free" else TRIAL_MAX_DAYS
-        await call.message.edit_text("Р’РІРµРґРёС‚Рµ РєРѕР»РёС‡РµСЃС‚РІРѕ РґРЅРµР№ (1-" + str(max_d) + "):")
+        await call.message.edit_text("Введите количество дней (1-" + str(max_d) + "):")
         return
     await state.update_data(num_days=int(val), selected_meals=[])
     await state.set_state(MenuFSM.meals_select)
     await call.message.edit_text(
-        "<b>РЁР°Рі 4/5: Р’С‹Р±РµСЂРёС‚Рµ РїСЂРёС‘РјС‹ РїРёС‰Рё</b>\n\nРћС‚РјРµС‚СЊС‚Рµ РЅСѓР¶РЅС‹Рµ Рё РЅР°Р¶РјРёС‚Рµ Р“РѕС‚РѕРІРѕ:",
+        "<b>Шаг 4/5: Выберите приёмы пищи</b>\n\nОтметьте нужные и нажмите Готово:",
         parse_mode="HTML",
         reply_markup=meals_keyboard([])
     )
@@ -206,15 +206,15 @@ async def process_days_custom(message: Message, state: FSMContext):
     try:
         days = int(message.text.strip())
         if days < 1 or days > max_d:
-            await message.answer("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ " + str(max_d) + ":")
+            await message.answer("Введите число от 1 до " + str(max_d) + ":")
             return
     except ValueError:
-        await message.answer("РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІРІРµРґРёС‚Рµ С‡РёСЃР»Рѕ:")
+        await message.answer("Пожалуйста, введите число:")
         return
     await state.update_data(num_days=days, selected_meals=[])
     await state.set_state(MenuFSM.meals_select)
     await message.answer(
-        "<b>РЁР°Рі 4/5: Р’С‹Р±РµСЂРёС‚Рµ РїСЂРёС‘РјС‹ РїРёС‰Рё</b>\n\nРћС‚РјРµС‚СЊС‚Рµ РЅСѓР¶РЅС‹Рµ Рё РЅР°Р¶РјРёС‚Рµ Р“РѕС‚РѕРІРѕ:",
+        "<b>Шаг 4/5: Выберите приёмы пищи</b>\n\nОтметьте нужные и нажмите Готово:",
         parse_mode="HTML",
         reply_markup=meals_keyboard([])
     )
@@ -227,7 +227,7 @@ async def process_meal_toggle(call: CallbackQuery, state: FSMContext):
         data = await state.get_data()
         selected = data.get("selected_meals", [])
         if not selected:
-            await call.answer("Р’С‹Р±РµСЂРёС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РїСЂРёС‘Рј РїРёС‰Рё!", show_alert=True)
+            await call.answer("Выберите хотя бы один приём пищи!", show_alert=True)
             return
         await state.set_state(MenuFSM.meal_times)
         await ask_meal_times(call.message, selected, state)
@@ -248,11 +248,11 @@ async def ask_meal_times(message, selected_meals: list, state: FSMContext):
     for m in selected_meals:
         lines.append("- " + MEAL_NAMES[m] + ": " + DEFAULT_TIMES[m])
     text = (
-        "<b>РЁР°Рі 5/5: Р’СЂРµРјСЏ РїСЂРёС‘РјРѕРІ РїРёС‰Рё</b>\n\n"
-        "РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ:\n" + "\n".join(lines) +
-        "\n\nРҐРѕС‚РёС‚Рµ РёР·РјРµРЅРёС‚СЊ? Р’РІРµРґРёС‚Рµ С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ:\n"
-        "<code>Р·Р°РІС‚СЂР°Рє 09:00, РѕР±РµРґ 14:00, СѓР¶РёРЅ 20:00</code>\n\n"
-        "РР»Рё РЅР°Р¶РјРёС‚Рµ РџСЂРѕРїСѓСЃС‚РёС‚СЊ РґР»СЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ СЃС‚Р°РЅРґР°СЂС‚РЅРѕРіРѕ РІСЂРµРјРµРЅРё:"
+        "<b>Шаг 5/5: Время приёмов пищи</b>\n\n"
+        "По умолчанию установлено:\n" + "\n".join(lines) +
+        "\n\nХотите изменить? Введите через запятую:\n"
+        "<code>завтрак 09:00, обед 14:00, ужин 20:00</code>\n\n"
+        "Или нажмите Пропустить для использования стандартного времени:"
     )
     await message.answer(text, parse_mode="HTML", reply_markup=skip_keyboard("skip_times"))
 
@@ -273,8 +273,8 @@ async def process_meal_times(message: Message, state: FSMContext):
     meals_config = {m: DEFAULT_TIMES[m] for m in selected}
 
     time_map = {
-        "Р·Р°РІС‚СЂР°Рє": "breakfast", "РѕР±РµРґ": "lunch", "СѓР¶РёРЅ": "dinner",
-        "РїРµСЂРµРєСѓСЃ": "snack", "РІС‚РѕСЂРѕР№ Р·Р°РІС‚СЂР°Рє": "brunch"
+        "завтрак": "breakfast", "обед": "lunch", "ужин": "dinner",
+        "перекус": "snack", "второй завтрак": "brunch"
     }
     try:
         parts = message.text.split(",")
@@ -306,9 +306,9 @@ async def show_confirmation(message, state: FSMContext):
 
     eaters_lines = []
     for i, e in enumerate(eaters):
-        line = "  - " + e.get("name", "Р§РµР»РѕРІРµРє " + str(i + 1))
+        line = "  - " + e.get("name", "Человек " + str(i + 1))
         if e.get("age"):
-            line += ", " + str(e["age"]) + " Р»РµС‚"
+            line += ", " + str(e["age"]) + " лет"
         if e.get("preferences"):
             line += " (" + e["preferences"] + ")"
         eaters_lines.append(line)
@@ -320,13 +320,13 @@ async def show_confirmation(message, state: FSMContext):
     meals_str = "\n".join(meals_lines)
 
     text = (
-        "<b>РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїР°СЂР°РјРµС‚СЂС‹ РјРµРЅСЋ:</b>\n\n"
-        "Р РµР¶РёРј РїРёС‚Р°РЅРёСЏ: " + diet_display + "\n"
-        "РљРѕР»РёС‡РµСЃС‚РІРѕ С‡РµР»РѕРІРµРє: " + str(num_people) + "\n"
-        "РљРѕР»РёС‡РµСЃС‚РІРѕ РґРЅРµР№: " + str(num_days) + "\n\n"
-        "<b>Р•РґРѕРєРё:</b>\n" + eaters_str + "\n\n"
-        "<b>РџСЂРёС‘РјС‹ РїРёС‰Рё:</b>\n" + meals_str + "\n\n"
-        "Р’СЃС‘ РІРµСЂРЅРѕ? РќР°Р¶РјРёС‚Рµ РЎРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РјРµРЅСЋ."
+        "<b>Подтвердите параметры меню:</b>\n\n"
+        "Режим питания: " + diet_display + "\n"
+        "Количество человек: " + str(num_people) + "\n"
+        "Количество дней: " + str(num_days) + "\n\n"
+        "<b>Едоки:</b>\n" + eaters_str + "\n\n"
+        "<b>Приёмы пищи:</b>\n" + meals_str + "\n\n"
+        "Всё верно? Нажмите Сгенерировать для создания меню."
     )
 
     await state.set_state(MenuFSM.confirm)
@@ -340,8 +340,8 @@ async def show_confirmation(message, state: FSMContext):
 @router.callback_query(MenuFSM.confirm, F.data == "cancel_menu")
 async def cancel_menu(call: CallbackQuery, state: FSMContext):
     await state.clear()
-    await call.message.edit_text("РЎРѕР·РґР°РЅРёРµ РјРµРЅСЋ РѕС‚РјРµРЅРµРЅРѕ.")
-    await call.message.answer("Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ:", reply_markup=main_menu_keyboard())
+    await call.message.edit_text("Создание меню отменено.")
+    await call.message.answer("Главное меню:", reply_markup=main_menu_keyboard())
 
 
 @router.callback_query(MenuFSM.confirm, F.data == "confirm_menu")
@@ -358,9 +358,9 @@ async def confirm_and_generate(call: CallbackQuery, state: FSMContext):
         num_days = FREE_MAX_DAYS
 
     progress_msg = await call.message.edit_text(
-        "<b>Р“РµРЅРµСЂРёСЂСѓСЋ РјРµРЅСЋ...</b>\n\n"
-        "РР СЃРѕСЃС‚Р°РІР»СЏРµС‚ СЂРµС†РµРїС‚С‹ СЃРїРµС†РёР°Р»СЊРЅРѕ РґР»СЏ РІР°СЃ. "
-        "Р­С‚Рѕ Р·Р°Р№РјРµС‚ 15-30 СЃРµРєСѓРЅРґ.",
+        "<b>Генерирую меню...</b>\n\n"
+        "ИИ составляет рецепты специально для вас. "
+        "Это займет 15-30 секунд.",
         parse_mode="HTML"
     )
 
@@ -410,9 +410,9 @@ async def confirm_and_generate(call: CallbackQuery, state: FSMContext):
     except Exception as e:
         logger.error("Menu generation error: " + str(e))
         await progress_msg.edit_text(
-            "<b>РћС€РёР±РєР° РїСЂРё РіРµРЅРµСЂР°С†РёРё РјРµРЅСЋ.</b>\n\n"
-            "РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.\n\n"
-            "Р”РµС‚Р°Р»Рё: " + str(e)[:200],
+            "<b>Ошибка при генерации меню.</b>\n\n"
+            "Пожалуйста, попробуйте снова.\n\n"
+            "Детали: " + str(e)[:200],
             parse_mode="HTML"
         )
     finally:
@@ -420,10 +420,10 @@ async def confirm_and_generate(call: CallbackQuery, state: FSMContext):
 
 
 def format_menu_summary(menu_data: dict, plan: str) -> str:
-    lines = ["<b>РњРµРЅСЋ РіРѕС‚РѕРІРѕ!</b>\n"]
+    lines = ["<b>Меню готово!</b>\n"]
     for day in menu_data.get("days", []):
         day_num = str(day.get("day", ""))
-        day_label = day.get("date_label", "Р”РµРЅСЊ " + day_num)
+        day_label = day.get("date_label", "День " + day_num)
         lines.append("\n<b>" + day_label + "</b>")
         for meal in day.get("meals", []):
             meal_name = meal.get("meal_name", "")
@@ -431,7 +431,7 @@ def format_menu_summary(menu_data: dict, plan: str) -> str:
             dishes = [d.get("name", "") for d in meal.get("dishes", [])]
             cal = meal.get("total_calories", "")
             if cal and plan != "free":
-                cal_str = " (" + str(cal) + " РєРєР°Р»)"
+                cal_str = " (" + str(cal) + " ккал)"
             else:
                 cal_str = ""
             lines.append("  " + meal_name + " " + meal_time + cal_str)
@@ -439,7 +439,7 @@ def format_menu_summary(menu_data: dict, plan: str) -> str:
                 lines.append("    - " + d)
 
     if plan == "free":
-        lines.append("\n\n<i>РљР°Р»РѕСЂРёР№РЅРѕСЃС‚СЊ Рё СЃРїРёСЃРѕРє РїРѕРєСѓРїРѕРє РґРѕСЃС‚СѓРїРЅС‹ РІ PRO</i>")
+        lines.append("\n\n<i>Калорийность и список покупок доступны в PRO</i>")
 
     return "\n".join(lines)
 
@@ -448,4 +448,4 @@ def format_menu_summary(menu_data: dict, plan: str) -> str:
 @router.message(F.text == "/cancel")
 async def cancel_handler(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer("Р”РµР№СЃС‚РІРёРµ РѕС‚РјРµРЅРµРЅРѕ.", reply_markup=main_menu_keyboard())
+    await message.answer("Действие отменено.", reply_markup=main_menu_keyboard())
