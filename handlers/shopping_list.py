@@ -104,3 +104,4 @@ async def delete_menu(call: CallbackQuery):
             await session.delete(menu)
             await session.commit()
     await call.message.edit_text("🗑️ Меню удалено.")
+ 
