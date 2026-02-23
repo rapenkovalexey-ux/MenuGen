@@ -1,4 +1,4 @@
-import io
+ import io
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -187,19 +187,28 @@ def generate_menu_pdf(menu_data: dict, menu_meta: dict, plan: str) -> bytes:
     story.append(HRFlowable(width="100%", thickness=2, color=colors.HexColor("#1565C0")))
 
     for day in menu_data.get("days", []):
-        story.append(Paragraph(f"📅 {day.get('date_label', f'День {day[\"day\"]}')}", day_style))
+        day_num = str(day.get("day", ""))
+        day_label = day.get("date_label", "День " + day_num)
+        story.append(Paragraph(day_label, day_style))
+
         if day.get("day_total_calories") and plan != "free":
-            story.append(Paragraph(f"Итого калорий за день: {day['day_total_calories']} ккал", body_style))
+            story.append(Paragraph(
+                "Итого калорий за день: " + str(day["day_total_calories"]) + " ккал",
+                body_style
+            ))
 
         for meal in day.get("meals", []):
             meal_name = meal.get("meal_name", meal.get("meal_type", ""))
             meal_time = meal.get("time", "")
             meal_cal = meal.get("total_calories", "")
-            cal_str = f" | {meal_cal} ккал" if meal_cal and plan != "free" else ""
-            story.append(Paragraph(f"⏰ {meal_name} ({meal_time}){cal_str}", meal_style))
+            if meal_cal and plan != "free":
+                cal_str = " | " + str(meal_cal) + " ккал"
+            else:
+                cal_str = ""
+            story.append(Paragraph(meal_name + " (" + meal_time + ")" + cal_str, meal_style))
 
             for dish in meal.get("dishes", []):
-                story.append(Paragraph(f"🍴 {dish.get('name', '')}", dish_style))
+                story.append(Paragraph(dish.get("name", ""), dish_style))
                 if dish.get("description"):
                     story.append(Paragraph(dish["description"], body_style))
 
@@ -208,7 +217,7 @@ def generate_menu_pdf(menu_data: dict, menu_meta: dict, plan: str) -> bytes:
                 for ing in dish.get("ingredients", []):
                     ing_data.append([
                         ing.get("name", ""),
-                        f"{ing.get('amount', '')} {ing.get('unit', '')}"
+                        str(ing.get("amount", "")) + " " + str(ing.get("unit", ""))
                     ])
                 if len(ing_data) > 1:
                     t = Table(ing_data, colWidths=[9*cm, 4*cm], hAlign="LEFT")
@@ -229,11 +238,13 @@ def generate_menu_pdf(menu_data: dict, menu_meta: dict, plan: str) -> bytes:
                 if show_cal and dish.get("calories_per_serving") and plan != "free":
                     macros = ""
                     if dish.get("proteins"):
-                        macros = (f" | Б: {dish['proteins']}г, "
-                                  f"Ж: {dish.get('fats', '?')}г, "
-                                  f"У: {dish.get('carbs', '?')}г")
+                        macros = (
+                            " | Б: " + str(dish["proteins"]) + "г, "
+                            "Ж: " + str(dish.get("fats", "?")) + "г, "
+                            "У: " + str(dish.get("carbs", "?")) + "г"
+                        )
                     story.append(Paragraph(
-                        f"Калорийность: {dish['calories_per_serving']} ккал{macros}",
+                        "Калорийность: " + str(dish["calories_per_serving"]) + " ккал" + macros,
                         body_style
                     ))
 
@@ -244,3 +255,4 @@ def generate_menu_pdf(menu_data: dict, menu_meta: dict, plan: str) -> bytes:
 
     doc.build(story)
     return buffer.getvalue()
+ 
