@@ -15,7 +15,7 @@ SUBSCRIPTION_PRICE_RUB = 299
 # Limits
 FREE_MAX_DAYS = 3
 TRIAL_DAYS = 10
-TRIAL_MAX_DAYS = 31
+TRIAL_MAX_DAYS = 31  # полный доступ как у paid
 
 # Groq — актуальная модель
 GROQ_MODEL = "llama-3.3-70b-versatile"
