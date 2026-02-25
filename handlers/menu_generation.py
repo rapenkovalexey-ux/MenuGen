@@ -171,7 +171,7 @@ async def proceed_to_days(message, state: FSMContext):
         text = (
             "<b>Шаг 3/5: На сколько дней составить меню?</b>\n\n"
             "Бесплатный план: максимум " + str(FREE_MAX_DAYS) + " дня. "
-            "Для большего — оформите PRO."
+            "Для большего — активируйте триал или оформите PRO."
         )
     else:
         text = "<b>Шаг 3/5: На сколько дней составить меню?</b>"
@@ -356,6 +356,7 @@ async def confirm_and_generate(call: CallbackQuery, state: FSMContext):
     num_days = data.get("num_days", 1)
     if plan == "free" and num_days > FREE_MAX_DAYS:
         num_days = FREE_MAX_DAYS
+    # trial и paid — без ограничений
 
     progress_msg = await call.message.edit_text(
         "<b>Генерирую меню...</b>\n\n"
@@ -433,7 +434,7 @@ def format_menu_summary(menu_data: dict, plan: str) -> str:
             if cal and plan != "free":
                 cal_str = " (" + str(cal) + " ккал)"
             else:
-                cal_str = ""
+                cal_str = ""  # free — без калорий  # free скрывает калории
             lines.append("  " + meal_name + " " + meal_time + cal_str)
             for d in dishes:
                 lines.append("    - " + d)

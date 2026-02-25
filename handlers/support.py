@@ -73,4 +73,4 @@ async def process_support_message(message: Message, state: FSMContext):
             parse_mode="HTML",
             reply_markup=main_menu_keyboard()
         )
-    await state.clear() 
+    await state.clear()

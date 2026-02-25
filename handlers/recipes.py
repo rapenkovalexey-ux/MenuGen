@@ -26,9 +26,10 @@ async def show_recipes(call: CallbackQuery):
     all_dishes = []
     for day in menu.content.get("days", []):
         for meal in day.get("meals", []):
-            # Free plan: no recipes for dinner
+            # Only free plan hides dinner recipes
             if plan == "free" and meal.get("meal_type") == "dinner":
                 continue
+            # trial and paid: full access
             for dish in meal.get("dishes", []):
                 all_dishes.append({
                     "name": dish.get("name", ""),
@@ -51,7 +52,7 @@ async def show_recipes(call: CallbackQuery):
         f"🍴 <b>Рецепты для меню</b>\n\n"
         f"Показано {min(10, len(all_dishes))} из {len(all_dishes)} блюд.\n"
         f"Выберите блюдо для поиска рецепта:"
-        + ("\n\n🔒 <i>Рецепты ужинов доступны в PRO</i>" if plan == "free" else "")
+        + ("\n\n🔒 <i>Рецепты ужинов доступны в триал и PRO</i>" if plan == "free" else "")
     )
 
     await call.message.edit_text(text, parse_mode="HTML", reply_markup=builder.as_markup())

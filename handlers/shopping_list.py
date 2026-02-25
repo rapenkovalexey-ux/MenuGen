@@ -23,7 +23,7 @@ async def send_shopping_list(call: CallbackQuery):
         return
 
     if plan == "free":
-        await call.answer("🔒 Список покупок доступен в PRO версии!", show_alert=True)
+        await call.answer("🔒 Список покупок доступен в триал или PRO версии!", show_alert=True)
         return
 
     await call.message.edit_text("🛒 <b>Формирую список покупок...</b>", parse_mode="HTML")
@@ -104,4 +104,3 @@ async def delete_menu(call: CallbackQuery):
             await session.delete(menu)
             await session.commit()
     await call.message.edit_text("🗑️ Меню удалено.")
- 

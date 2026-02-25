@@ -7,4 +7,3 @@ router = Router()
 @router.message(F.text == "⚙️ Настройки")
 async def settings(message: Message):
     await message.answer("⚙️ Настройки будут добавлены в следующем обновлении.")
-
